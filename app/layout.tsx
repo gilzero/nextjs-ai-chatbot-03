@@ -6,9 +6,9 @@ import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://chat.vercel.ai'),
-  title: 'Next.js Chatbot Template',
-  description: 'Next.js chatbot template using the AI SDK.',
+  metadataBase: new URL('https://anesai.weiming.cn/'),
+  title: 'Anesthesia AI Assistant', // Changed title
+  description: 'AI assistant for anesthesiology professionals.', // Changed description
 };
 
 export const viewport = {
@@ -36,37 +36,37 @@ const THEME_COLOR_SCRIPT = `\
 })();`;
 
 export default async function RootLayout({
-  children,
-}: Readonly<{
+                                           children,
+                                         }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      // `next-themes` injects an extra classname to the body element to avoid
-      // visual flicker before hydration. Hence the `suppressHydrationWarning`
-      // prop is necessary to avoid the React hydration mismatch warning.
-      // https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
-      suppressHydrationWarning
-    >
+      <html
+          lang="en"
+          // `next-themes` injects an extra classname to the body element to avoid
+          // visual flicker before hydration. Hence the `suppressHydrationWarning`
+          // prop is necessary to avoid the React hydration mismatch warning.
+          // https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
+          suppressHydrationWarning
+      >
       <head>
         <script
-          dangerouslySetInnerHTML={{
-            __html: THEME_COLOR_SCRIPT,
-          }}
+            dangerouslySetInnerHTML={{
+              __html: THEME_COLOR_SCRIPT,
+            }}
         />
       </head>
       <body className="antialiased">
-        <ThemeProvider
+      <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
-        >
-          <Toaster position="top-center" />
-          {children}
-        </ThemeProvider>
+      >
+        <Toaster position="top-center" />
+        {children}
+      </ThemeProvider>
       </body>
-    </html>
+      </html>
   );
 }

@@ -1,3 +1,4 @@
+// Filepath: tailwind.config.ts
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
@@ -68,6 +69,31 @@ const config: Config = {
           'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
+        },
+        // Add custom colors
+        'hospital-blue': {
+          50: '#f0f7ff',
+          100: '#e0efff',
+          200: '#c0dfff',
+          300: '#a0cfff',
+          400: '#80bfff',
+          500: '#60afff',
+          600: '#409fff',
+          700: '#208fff',
+          800: '#107fff',
+          900: '#086fff',
+        },
+        'hospital-gray': {
+          50: '#f9f9f9',
+          100: '#f0f0f0',
+          200: '#e0e0e0',
+          300: '#c0c0c0',
+          400: '#a0a0a0',
+          500: '#808080',
+          600: '#606060',
+          700: '#404040',
+          800: '#202020',
+          900: '#101010',
         },
       },
     },
