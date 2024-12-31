@@ -1,3 +1,4 @@
+// Filepath: lib/ai/models.ts
 // Define your models here.
 
 export interface Model {
@@ -8,6 +9,12 @@ export interface Model {
 }
 
 export const models: Array<Model> = [
+  {
+    id: 'claude-3-5-sonnet-20241022',
+    label: 'Claude 3.5 Sonnet',
+    apiIdentifier: 'claude-3-5-sonnet-20241022',
+    description: 'Powerful model for complex tasks',
+  },
   {
     id: 'gpt-4o',
     label: 'GPT 4o',
@@ -22,4 +29,4 @@ export const models: Array<Model> = [
   },
 ] as const;
 
-export const DEFAULT_MODEL_NAME: string = 'gpt-4o';
+export const DEFAULT_MODEL_NAME: string = 'claude-3-5-sonnet-20241022';
