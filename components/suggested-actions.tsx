@@ -17,24 +17,24 @@ interface SuggestedActionsProps {
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: 'What is the dosage',
-      label: 'for propofol?',
-      action: 'What is the dosage for propofol?',
+      title: '计算剂量',
+      label: '用于儿童患者的罗库溴铵。',
+      action: '罗库溴铵在儿童患者中的剂量是多少？',
     },
     {
-      title: 'Explain the steps',
-      label: 'for intubation',
-      action: 'Explain the steps for intubation',
+      title: '处理方案',
+      label: '针对疑似局部麻醉药毒性。',
+      action: '疑似局部麻醉药毒性的处理方案是什么？',
     },
     {
-      title: 'What are the contraindications',
-      label: 'for spinal anesthesia?',
-      action: 'What are the contraindications for spinal anesthesia?',
+      title: '解释准备步骤',
+      label: '用于快速序贯诱导。',
+      action: '快速序贯诱导的准备步骤是什么？',
     },
     {
-      title: 'What are the emergency protocols',
-      label: 'for malignant hyperthermia?',
-      action: 'What are the emergency protocols for malignant hyperthermia?',
+      title: '禁忌症',
+      label: '在产科患者中使用硬膜外麻醉。',
+      action: '硬膜外麻醉在产科患者中的禁忌症是什么？',
     },
   ];
 
