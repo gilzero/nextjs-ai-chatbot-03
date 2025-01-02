@@ -3,6 +3,7 @@ import { openai } from '@ai-sdk/openai';
 import { experimental_wrapLanguageModel as wrapLanguageModel } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 
 import { customMiddleware } from './custom-middleware';
 
@@ -17,7 +18,13 @@ export const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-console.log("Anthropic API Key:", process.env.ANTHROPIC_API_KEY);
+if (process.env.ANTHROPIC_API_KEY) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const maskedKey = `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}`;
+  console.log("Anthropic API Key (masked):", maskedKey);
+} else {
+  console.log("Anthropic API Key is NOT set.");
+}
 
 export const anthropicModel = (apiIdentifier: string) => {
   try {
@@ -40,6 +47,27 @@ export const googleModel = (apiIdentifier: string) => {
     });
   } catch (error) {
     console.error('Error creating Google model:', error);
+    throw error;
+  }
+};
+
+// Perplexity Integration
+const perplexity = createOpenAICompatible({
+  name: 'perplexity',
+  headers: {
+    Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+  },
+  baseURL: 'https://api.perplexity.ai/',
+});
+
+export const perplexityModel = (apiIdentifier: string) => {
+  try {
+    return wrapLanguageModel({
+      model: perplexity(apiIdentifier),
+      middleware: customMiddleware,
+    });
+  } catch (error) {
+    console.error('Error creating Perplexity model:', error);
     throw error;
   }
 };

@@ -17,6 +17,9 @@ importers:
       '@ai-sdk/openai':
         specifier: 1.0.6
         version: 1.0.6(zod@3.23.8)
+      '@ai-sdk/openai-compatible':
+        specifier: ^0.0.13
+        version: 0.0.13(zod@3.23.8)
       '@codemirror/lang-javascript':
         specifier: ^6.2.2
         version: 6.2.2
@@ -254,6 +257,12 @@ packages:
 
   '@ai-sdk/google@1.0.12':
     resolution: {integrity: sha512-vZUK8X997tKmycwCa9d26PoGtIyNEILykYb6JscMoA/pfr5Nss8Ox1JtSGn+PRkehpJhclOaLNWV1JQAjp73aA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
+
+  '@ai-sdk/openai-compatible@0.0.13':
+    resolution: {integrity: sha512-fuauXYKac6PBuf8m52tWcWQW0UCScEkwTaOyr00TcPeK3dd8nPP+ZJzSYE5QhFg7rwi9EH3ahIFqSX1biXhdkQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.0.0
@@ -3789,6 +3798,12 @@ snapshots:
       zod: 3.23.8
 
   '@ai-sdk/google@1.0.12(zod@3.23.8)':
+    dependencies:
+      '@ai-sdk/provider': 1.0.3
+      '@ai-sdk/provider-utils': 2.0.5(zod@3.23.8)
+      zod: 3.23.8
+
+  '@ai-sdk/openai-compatible@0.0.13(zod@3.23.8)':
     dependencies:
       '@ai-sdk/provider': 1.0.3
       '@ai-sdk/provider-utils': 2.0.5(zod@3.23.8)

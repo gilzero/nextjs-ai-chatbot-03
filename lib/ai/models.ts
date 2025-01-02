@@ -1,12 +1,13 @@
+
 // filepath: lib/ai/models.ts
 // Define your models here.
 
-export interface Model {
-  id: string;
-  label: string;
-  apiIdentifier: string;
-  description: string;
-}
+    export interface Model {
+      id: string;
+      label: string;
+      apiIdentifier: string;
+      description: string;
+    }
 
 export const models: Array<Model> = [
   {
@@ -32,6 +33,12 @@ export const models: Array<Model> = [
     label: 'Gemini 2.0 Flash Exp',
     apiIdentifier: 'gemini-2.0-flash-exp',
     description: 'Fast and efficient model from Google',
+  },
+  {
+    id: 'llama-3.1-sonar-large-32k-online',
+    label: 'Perplexity Llama 3',
+    apiIdentifier: 'llama-3.1-sonar-large-32k-online',
+    description: 'Perplexity Llama 3 model',
   },
 ] as const;
 

@@ -32,6 +32,15 @@ yarn-error.log*
 # turbo
 .turbo
 
+# IDE Specific Files/Folders
+.idea/
+modules.xml
+nextjs-ai-chatbot-03-anesai.iml
+Project_Default.xml
+vcs.xml
+
+
+# Environment variables (already included but moved)
 .env
 .vercel
 .vscode
