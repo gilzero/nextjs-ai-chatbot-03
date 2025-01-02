@@ -35,9 +35,9 @@ export const models: Array<Model> = [
     description: 'Fast and efficient model from Google',
   },
   {
-    id: 'llama-3.1-sonar-large-32k-online',
+    id: 'llama-3.1-sonar-large-128k-online',
     label: 'Perplexity Llama 3',
-    apiIdentifier: 'llama-3.1-sonar-large-32k-online',
+    apiIdentifier: 'llama-3.1-sonar-large-128k-online',
     description: 'Perplexity Llama 3 model',
   },
 ] as const;

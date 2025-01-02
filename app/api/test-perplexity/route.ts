@@ -5,7 +5,7 @@ import { generateText } from 'ai';
 export async function GET() {
     try {
         const response = await generateText({
-            model: perplexityModel('llama-3.1-sonar-large-32k-online'),
+            model: perplexityModel('llama-3.1-sonar-large-128k-online'),
             prompt: 'Hello, Perplexity!',
         });
         console.log("Test API Response:", response);
