@@ -8,7 +8,7 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL('https://anesai.weiming.cn/'),
   title: 'Anesthesia AI Assistant', // Changed title
-  description: 'AI assistant for anesthesiology professionals.', // Changed description
+  description: 'AI assistant for anesthesiology professionals by Weiming Medical and Dreamer AI.', // Changed description
 };
 
 export const viewport = {
