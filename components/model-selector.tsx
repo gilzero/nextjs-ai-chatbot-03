@@ -1,4 +1,4 @@
-// Filepath: components/model-selector.tsx
+// filepath: components/model-selector.tsx
 'use client';
 
 import { startTransition, useMemo, useOptimistic, useState } from 'react';
@@ -56,6 +56,7 @@ export function ModelSelector({
                             startTransition(() => {
                                 setOptimisticModelId(model.id);
                                 saveModelId(model.id);
+                                console.log("Selected Model:", model.id);
                             });
                         }}
                         className="gap-4 group/item flex flex-row justify-between items-center"

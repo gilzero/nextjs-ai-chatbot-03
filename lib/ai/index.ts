@@ -1,4 +1,4 @@
-// Filepath: lib/ai/index.ts
+// filepath: lib/ai/index.ts
 import { openai } from '@ai-sdk/openai';
 import { experimental_wrapLanguageModel as wrapLanguageModel } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
@@ -16,8 +16,11 @@ export const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+console.log("Anthropic API Key:", process.env.ANTHROPIC_API_KEY);
+
 export const anthropicModel = (apiIdentifier: string) => {
   try {
+    console.log("Creating Anthropic model with:", apiIdentifier);
     return wrapLanguageModel({
       model: anthropic(apiIdentifier),
       middleware: customMiddleware,

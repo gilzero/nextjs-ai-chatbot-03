@@ -1,3 +1,4 @@
+// filepath: app/(chat)/api/chat/route.ts
 import {
   type Message,
   convertToCoreMessages,
@@ -8,7 +9,7 @@ import {
 import { z } from 'zod';
 
 import { auth } from '@/app/(auth)/auth';
-import { customModel } from '@/lib/ai';
+import { customModel, anthropicModel } from '@/lib/ai';
 import { models } from '@/lib/ai/models';
 import {
   codePrompt,
@@ -36,10 +37,10 @@ import { generateTitleFromUserMessage } from '../../actions';
 export const maxDuration = 60;
 
 type AllowedTools =
-  | 'createDocument'
-  | 'updateDocument'
-  | 'requestSuggestions'
-  | 'getWeather';
+    | 'createDocument'
+    | 'updateDocument'
+    | 'requestSuggestions'
+    | 'getWeather';
 
 const blocksTools: AllowedTools[] = [
   'createDocument',
@@ -57,7 +58,9 @@ export async function POST(request: Request) {
     messages,
     modelId,
   }: { id: string; messages: Array<Message>; modelId: string } =
-    await request.json();
+      await request.json();
+
+  console.log("API Request Body:", { id, messages, modelId }); // Added logging here
 
   const session = await auth();
 
@@ -101,7 +104,7 @@ export async function POST(request: Request) {
       });
 
       const result = streamText({
-        model: customModel(model.apiIdentifier),
+        model: modelId.startsWith('claude') ? anthropicModel(modelId) : customModel(modelId),
         system: systemPrompt,
         messages: coreMessages,
         maxSteps: 5,
@@ -115,7 +118,7 @@ export async function POST(request: Request) {
             }),
             execute: async ({ latitude, longitude }) => {
               const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto`,
+                  `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}¤t=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto`,
               );
 
               const weatherData = await response.json();
@@ -124,7 +127,7 @@ export async function POST(request: Request) {
           },
           createDocument: {
             description:
-              'Create a document for a writing activity. This tool will call other functions that will generate the contents of the document based on the title and kind.',
+                'Create a document for a writing activity. This tool will call other functions that will generate the contents of the document based on the title and kind.',
             parameters: z.object({
               title: z.string(),
               kind: z.enum(['text', 'code']),
@@ -157,7 +160,7 @@ export async function POST(request: Request) {
                 const { fullStream } = streamText({
                   model: customModel(model.apiIdentifier),
                   system:
-                    'Write about the given topic. Markdown is supported. Use headings wherever appropriate.',
+                      'Write about the given topic. Markdown is supported. Use headings wherever appropriate.',
                   prompt: title,
                 });
 
@@ -222,7 +225,7 @@ export async function POST(request: Request) {
                 title,
                 kind,
                 content:
-                  'A document was created and is now visible to the user.',
+                    'A document was created and is now visible to the user.',
               };
             },
           },
@@ -231,8 +234,8 @@ export async function POST(request: Request) {
             parameters: z.object({
               id: z.string().describe('The ID of the document to update'),
               description: z
-                .string()
-                .describe('The description of changes that need to be made'),
+                  .string()
+                  .describe('The description of changes that need to be made'),
             }),
             execute: async ({ id, description }) => {
               const document = await getDocumentById({ id });
@@ -334,8 +337,8 @@ export async function POST(request: Request) {
             description: 'Request suggestions for a document',
             parameters: z.object({
               documentId: z
-                .string()
-                .describe('The ID of the document to request edits'),
+                  .string()
+                  .describe('The ID of the document to request edits'),
             }),
             execute: async ({ documentId }) => {
               const document = await getDocumentById({ id: documentId });
@@ -347,25 +350,25 @@ export async function POST(request: Request) {
               }
 
               const suggestions: Array<
-                Omit<Suggestion, 'userId' | 'createdAt' | 'documentCreatedAt'>
+                  Omit<Suggestion, 'userId' | 'createdAt' | 'documentCreatedAt'>
               > = [];
 
               const { elementStream } = streamObject({
                 model: customModel(model.apiIdentifier),
                 system:
-                  'You are a help writing assistant. Given a piece of writing, please offer suggestions to improve the piece of writing and describe the change. It is very important for the edits to contain full sentences instead of just words. Max 5 suggestions.',
+                    'You are a help writing assistant. Given a piece of writing, please offer suggestions to improve the piece of writing and describe the change. It is very important for the edits to contain full sentences instead of just words. Max 5 suggestions.',
                 prompt: document.content,
                 output: 'array',
                 schema: z.object({
                   originalSentence: z
-                    .string()
-                    .describe('The original sentence'),
+                      .string()
+                      .describe('The original sentence'),
                   suggestedSentence: z
-                    .string()
-                    .describe('The suggested sentence'),
+                      .string()
+                      .describe('The suggested sentence'),
                   description: z
-                    .string()
-                    .describe('The description of the suggestion'),
+                      .string()
+                      .describe('The description of the suggestion'),
                 }),
               });
 
@@ -413,27 +416,27 @@ export async function POST(request: Request) {
           if (session.user?.id) {
             try {
               const responseMessagesWithoutIncompleteToolCalls =
-                sanitizeResponseMessages(response.messages);
+                  sanitizeResponseMessages(response.messages);
 
               await saveMessages({
                 messages: responseMessagesWithoutIncompleteToolCalls.map(
-                  (message) => {
-                    const messageId = generateUUID();
+                    (message) => {
+                      const messageId = generateUUID();
 
-                    if (message.role === 'assistant') {
-                      dataStream.writeMessageAnnotation({
-                        messageIdFromServer: messageId,
-                      });
-                    }
+                      if (message.role === 'assistant') {
+                        dataStream.writeMessageAnnotation({
+                          messageIdFromServer: messageId,
+                        });
+                      }
 
-                    return {
-                      id: messageId,
-                      chatId: id,
-                      role: message.role,
-                      content: message.content,
-                      createdAt: new Date(),
-                    };
-                  },
+                      return {
+                        id: messageId,
+                        chatId: id,
+                        role: message.role,
+                        content: message.content,
+                        createdAt: new Date(),
+                      };
+                    },
                 ),
               });
             } catch (error) {
