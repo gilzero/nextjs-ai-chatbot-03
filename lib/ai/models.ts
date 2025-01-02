@@ -10,12 +10,12 @@
     }
 
 export const models: Array<Model> = [
-  {
-    id: 'claude-3-5-sonnet-20241022',
-    label: 'Claude 3.5 Sonnet',
-    apiIdentifier: 'claude-3-5-sonnet-20241022',
-    description: 'Powerful model for complex tasks',
-  },
+  // {
+  //   id: 'claude-3-5-sonnet-20241022',
+  //   label: 'Claude 3.5 Sonnet',
+  //   apiIdentifier: 'claude-3-5-sonnet-20241022',
+  //   description: 'Powerful model for complex tasks',
+  // },
   {
     id: 'gpt-4o',
     label: 'Weiming AI Standard',
