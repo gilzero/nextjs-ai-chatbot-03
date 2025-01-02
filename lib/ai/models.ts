@@ -1,4 +1,4 @@
-// Filepath: lib/ai/models.ts
+// filepath: lib/ai/models.ts
 // Define your models here.
 
 export interface Model {
@@ -26,6 +26,12 @@ export const models: Array<Model> = [
     label: 'GPT 4o mini',
     apiIdentifier: 'gpt-4o-mini',
     description: 'Small model for fast, lightweight tasks',
+  },
+  {
+    id: 'gemini-2.0-flash-exp',
+    label: 'Gemini 2.0 Flash Exp',
+    apiIdentifier: 'gemini-2.0-flash-exp',
+    description: 'Fast and efficient model from Google',
   },
 ] as const;
 

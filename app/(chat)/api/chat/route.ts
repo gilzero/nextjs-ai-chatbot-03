@@ -9,7 +9,7 @@ import {
 import { z } from 'zod';
 
 import { auth } from '@/app/(auth)/auth';
-import { customModel, anthropicModel } from '@/lib/ai';
+import { customModel, anthropicModel, googleModel } from '@/lib/ai';
 import { models } from '@/lib/ai/models';
 import {
   codePrompt,
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
   }: { id: string; messages: Array<Message>; modelId: string } =
       await request.json();
 
-  console.log("API Request Body:", { id, messages, modelId }); // Added logging here
+  console.log("API Request Body:", { id, messages, modelId });
 
   const session = await auth();
 
@@ -103,8 +103,11 @@ export async function POST(request: Request) {
         content: userMessageId,
       });
 
+      const selectedModel = modelId.startsWith('claude') ? anthropicModel(modelId) : modelId.startsWith('gemini') ? googleModel(modelId) : customModel(modelId);
+      console.log("Selected Model for streamText:", selectedModel);
+
       const result = streamText({
-        model: modelId.startsWith('claude') ? anthropicModel(modelId) : customModel(modelId),
+        model: selectedModel,
         system: systemPrompt,
         messages: coreMessages,
         maxSteps: 5,
