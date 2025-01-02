@@ -1,6 +1,7 @@
 // filepath: app/api/test-gemini/route.ts
 import { googleModel } from '@/lib/ai';
 import { generateText } from 'ai';
+import { logError } from '@/lib/utils'; // Import the logging utility
 
 export async function GET() {
     try {
@@ -10,8 +11,8 @@ export async function GET() {
         });
         console.log("Test API Response:", response);
         return Response.json(response);
-    } catch (error) {
-        console.error("Test API Error:", error);
+    } catch (error: any) {
+        logError("Test API Error (Gemini): Failed to generate text", error); // Log the error with the utility
         return new Response('Failed to generate text', { status: 500 });
     }
 }

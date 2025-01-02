@@ -1,6 +1,8 @@
 /**
  * Core utility functions for message handling, data transformation, and common operations.
  * This module provides essential utilities used throughout the application.
+ *
+ * Filepath: lib/utils.ts
  */
 
 import type {
@@ -18,7 +20,7 @@ import type { Message as DBMessage, Document } from '@/lib/db/schema';
 /**
  * Combines Tailwind CSS classes with custom class values.
  * Merges multiple class values into a single string using clsx and tailwind-merge.
- * 
+ *
  * @param inputs - Array of class values to be merged
  * @returns Merged class string
  */
@@ -37,7 +39,7 @@ interface ApplicationError extends Error {
 /**
  * Generic data fetcher with error handling
  * Performs a fetch request and handles common error cases
- * 
+ *
  * @param url - The URL to fetch data from
  * @throws {ApplicationError} When the fetch request fails
  * @returns Parsed JSON response
@@ -61,7 +63,7 @@ export const fetcher = async (url: string) => {
 
 /**
  * Retrieves data from localStorage with browser environment check
- * 
+ *
  * @param key - The localStorage key to retrieve
  * @returns Parsed data from localStorage or empty array if not found/available
  */
@@ -75,7 +77,7 @@ export function getLocalStorage(key: string) {
 /**
  * Generates a RFC4122 version 4 compliant UUID
  * Uses a combination of random and reserved bits as specified in the RFC
- * 
+ *
  * @returns A randomly generated UUID string
  */
 export function generateUUID(): string {
@@ -89,7 +91,7 @@ export function generateUUID(): string {
 /**
  * Adds tool message results to existing chat messages
  * Updates tool invocations with their corresponding results
- * 
+ *
  * @param toolMessage - The tool message containing results
  * @param messages - Array of existing chat messages
  * @returns Updated array of messages with tool results
@@ -131,7 +133,7 @@ function addToolMessageToChat({
 /**
  * Converts database messages to UI-friendly message format
  * Handles different message types and content structures
- * 
+ *
  * @param messages - Array of database messages
  * @returns Converted array of UI messages
  */
@@ -181,7 +183,7 @@ export function convertToUIMessages(
 
 /**
  * Sanitizes response messages by removing invalid or incomplete tool calls
- * 
+ *
  * @param messages - Array of tool or assistant messages
  * @returns Sanitized array of messages
  */
@@ -226,7 +228,7 @@ export function sanitizeResponseMessages(
 
 /**
  * Sanitizes UI messages by removing invalid or incomplete tool invocations
- * 
+ *
  * @param messages - Array of UI messages
  * @returns Sanitized array of UI messages
  */
@@ -265,7 +267,7 @@ export function sanitizeUIMessages(messages: Array<Message>): Array<Message> {
 
 /**
  * Retrieves the most recent user message from a message array
- * 
+ *
  * @param messages - Array of core messages
  * @returns The most recent user message or undefined
  */
@@ -276,7 +278,7 @@ export function getMostRecentUserMessage(messages: Array<CoreMessage>) {
 
 /**
  * Gets the timestamp for a document at a specific index
- * 
+ *
  * @param documents - Array of documents
  * @param index - Index of the desired document
  * @returns Document timestamp or current date if not found
@@ -293,7 +295,7 @@ export function getDocumentTimestampByIndex(
 
 /**
  * Extracts message ID from annotations or returns original ID
- * 
+ *
  * @param message - Message object
  * @returns Message ID from annotations or original message ID
  */
@@ -305,4 +307,15 @@ export function getMessageIdFromAnnotations(message: Message) {
 
   // @ts-expect-error messageIdFromServer is not defined in MessageAnnotation
   return annotation.messageIdFromServer;
+}
+
+/**
+ * Logs an error message to the console with a timestamp.
+ *
+ * @param message - The error message to log.
+ * @param error - The error object or any additional information.
+ */
+export function logError(message: string, error: any) {
+  console.error(`[${new Date().toISOString()}] ERROR: ${message}`, error);
+  // In a real application, you might send this to a logging service
 }

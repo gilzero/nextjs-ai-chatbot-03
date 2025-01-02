@@ -73,6 +73,7 @@ import {
   generateUUID,
   getMostRecentUserMessage,
   sanitizeResponseMessages,
+  logError, // Import the logging utility
 } from '@/lib/utils';
 
 import { generateTitleFromUserMessage } from '../../actions';
@@ -168,19 +169,29 @@ async function validateModel(modelId: string) {
 }
 
 async function getOrCreateChat(id: string, userId: string, userMessage: CoreUserMessage) {
-  const chat = await getChatById({ id });
-  if (!chat) {
-    const title = await generateTitleFromUserMessage({ message: userMessage });
-    await saveChat({ id, userId, title });
+  try {
+    const chat = await getChatById({ id });
+    if (!chat) {
+      const title = await generateTitleFromUserMessage({ message: userMessage });
+      await saveChat({ id, userId, title });
+    }
+  } catch (error) {
+    logError('Error getting or creating chat', error);
+    throw new Error('Failed to get or create chat.');
   }
 }
 
 async function saveUserMessage(id: string, userMessage: CoreUserMessage) {
-  const userMessageId = generateUUID();
-  await saveMessages({
-    messages: [{ ...userMessage, id: userMessageId, createdAt: new Date(), chatId: id }],
-  });
-  return userMessageId;
+  try {
+    const userMessageId = generateUUID();
+    await saveMessages({
+      messages: [{ ...userMessage, id: userMessageId, createdAt: new Date(), chatId: id }],
+    });
+    return userMessageId;
+  } catch (error) {
+    logError('Error saving user message', error);
+    throw new Error('Failed to save user message.');
+  }
 }
 
 function selectModel(modelId: string) {
@@ -197,11 +208,16 @@ async function handleGetWeather(
   dataStream: DataStreamType,
   { latitude, longitude }: ToolExecutionParams<'getWeather'>,
 ) {
-  const response = await fetch(
-    `${WEATHER_API_URL}?latitude=${latitude}&longitude=${longitude}¤t=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto`,
-  );
-  const weatherData = await response.json();
-  return weatherData;
+  try {
+    const response = await fetch(
+      `${WEATHER_API_URL}?latitude=${latitude}&longitude=${longitude}¤t=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto`,
+    );
+    const weatherData = await response.json();
+    return weatherData;
+  } catch (error) {
+    logError('Error fetching weather data', error);
+    throw new Error('Failed to fetch weather data.');
+  }
 }
 
 async function streamDocumentContent(
@@ -213,43 +229,48 @@ async function streamDocumentContent(
   kind: 'text' | 'code' = 'text',
 ) {
   let draftText = '';
-  if (kind === 'text') {
-    const { fullStream } = streamText({
-      model: customModel(model.apiIdentifier),
-      system: systemPrompt,
-      prompt: prompt,
-    });
+  try {
+    if (kind === 'text') {
+      const { fullStream } = streamText({
+        model: customModel(model.apiIdentifier),
+        system: systemPrompt,
+        prompt: prompt,
+      });
 
-    for await (const delta of fullStream) {
-      if (delta.type === 'text-delta') {
-        draftText += delta.textDelta;
-        writeDataToStream(
-          dataStream,
-          DATA_STREAM_TYPES.TEXT_DELTA,
-          delta.textDelta,
-        );
+      for await (const delta of fullStream) {
+        if (delta.type === 'text-delta') {
+          draftText += delta.textDelta;
+          writeDataToStream(
+            dataStream,
+            DATA_STREAM_TYPES.TEXT_DELTA,
+            delta.textDelta,
+          );
+        }
+      }
+    } else if (kind === 'code' && schema) {
+      const { fullStream } = streamObject({
+        model: customModel(model.apiIdentifier),
+        system: systemPrompt,
+        prompt: prompt,
+        schema: schema,
+      });
+
+      for await (const delta of fullStream) {
+        if (delta.type === 'object' && delta.object.code) {
+          draftText = delta.object.code;
+          writeDataToStream(
+            dataStream,
+            DATA_STREAM_TYPES.CODE_DELTA,
+            delta.object.code,
+          );
+        }
       }
     }
-  } else if (kind === 'code' && schema) {
-    const { fullStream } = streamObject({
-      model: customModel(model.apiIdentifier),
-      system: systemPrompt,
-      prompt: prompt,
-      schema: schema,
-    });
-
-    for await (const delta of fullStream) {
-      if (delta.type === 'object' && delta.object.code) {
-        draftText = delta.object.code;
-        writeDataToStream(
-          dataStream,
-          DATA_STREAM_TYPES.CODE_DELTA,
-          delta.object.code,
-        );
-      }
-    }
+    return draftText;
+  } catch (error) {
+    logError('Error streaming document content', error);
+    throw new Error('Failed to stream document content.');
   }
-  return draftText;
 }
 
 async function handleCreateDocument(
@@ -258,33 +279,38 @@ async function handleCreateDocument(
   userId: string,
   { title, kind }: ToolExecutionParams<'createDocument'>,
 ) {
-  const id = generateUUID();
-  writeDataToStream(dataStream, DATA_STREAM_TYPES.ID, id);
-  writeDataToStream(dataStream, DATA_STREAM_TYPES.TITLE, title);
-  writeDataToStream(dataStream, DATA_STREAM_TYPES.KIND, kind);
-  writeDataToStream(dataStream, DATA_STREAM_TYPES.CLEAR, '');
+  try {
+    const id = generateUUID();
+    writeDataToStream(dataStream, DATA_STREAM_TYPES.ID, id);
+    writeDataToStream(dataStream, DATA_STREAM_TYPES.TITLE, title);
+    writeDataToStream(dataStream, DATA_STREAM_TYPES.KIND, kind);
+    writeDataToStream(dataStream, DATA_STREAM_TYPES.CLEAR, '');
 
-  const draftText = await streamDocumentContent(
-    dataStream,
-    model,
-    kind === 'text'
-      ? 'Write about the given topic. Markdown is supported. Use headings wherever appropriate.'
-      : codePrompt,
-    title,
-    kind === 'code' ? z.object({ code: z.string() }) : undefined,
-    kind,
-  );
+    const draftText = await streamDocumentContent(
+      dataStream,
+      model,
+      kind === 'text'
+        ? 'Write about the given topic. Markdown is supported. Use headings wherever appropriate.'
+        : codePrompt,
+      title,
+      kind === 'code' ? z.object({ code: z.string() }) : undefined,
+      kind,
+    );
 
-  writeDataToStream(dataStream, DATA_STREAM_TYPES.FINISH, '');
+    writeDataToStream(dataStream, DATA_STREAM_TYPES.FINISH, '');
 
-  await saveDocument({ id, title, kind, content: draftText, userId });
+    await saveDocument({ id, title, kind, content: draftText, userId });
 
-  return {
-    id,
-    title,
-    kind,
-    content: 'A document was created and is now visible to the user.',
-  };
+    return {
+      id,
+      title,
+      kind,
+      content: 'A document was created and is now visible to the user.',
+    };
+  } catch (error) {
+    logError('Error creating document', error);
+    throw new Error('Failed to create document.');
+  }
 }
 
 async function handleUpdateDocument(
@@ -293,38 +319,43 @@ async function handleUpdateDocument(
   userId: string,
   { id, description }: ToolExecutionParams<'updateDocument'>,
 ) {
-  const document = await getDocumentById({ id });
-  if (!document) {
-    return { error: 'Document not found' };
+  try {
+    const document = await getDocumentById({ id });
+    if (!document) {
+      return { error: 'Document not found' };
+    }
+
+    writeDataToStream(dataStream, DATA_STREAM_TYPES.CLEAR, document.title);
+
+    const draftText = await streamDocumentContent(
+      dataStream,
+      model,
+      updateDocumentPrompt(document.content),
+      description,
+      document.kind === 'code' ? z.object({ code: z.string() }) : undefined,
+      document.kind,
+    );
+
+    writeDataToStream(dataStream, DATA_STREAM_TYPES.FINISH, '');
+
+    await saveDocument({
+      id,
+      title: document.title,
+      content: draftText,
+      kind: document.kind,
+      userId,
+    });
+
+    return {
+      id,
+      title: document.title,
+      kind: document.kind,
+      content: 'The document has been updated successfully.',
+    };
+  } catch (error) {
+    logError('Error updating document', error);
+    throw new Error('Failed to update document.');
   }
-
-  writeDataToStream(dataStream, DATA_STREAM_TYPES.CLEAR, document.title);
-
-  const draftText = await streamDocumentContent(
-    dataStream,
-    model,
-    updateDocumentPrompt(document.content),
-    description,
-    document.kind === 'code' ? z.object({ code: z.string() }) : undefined,
-    document.kind,
-  );
-
-  writeDataToStream(dataStream, DATA_STREAM_TYPES.FINISH, '');
-
-  await saveDocument({
-    id,
-    title: document.title,
-    content: draftText,
-    kind: document.kind,
-    userId,
-  });
-
-  return {
-    id,
-    title: document.title,
-    kind: document.kind,
-    content: 'The document has been updated successfully.',
-  };
 }
 
 async function handleRequestSuggestions(
@@ -333,57 +364,62 @@ async function handleRequestSuggestions(
   userId: string,
   { documentId }: ToolExecutionParams<'requestSuggestions'>,
 ) {
-  const document = await getDocumentById({ id: documentId });
-  if (!document?.content) {
-    return { error: 'Document not found' };
-  }
+  try {
+    const document = await getDocumentById({ id: documentId });
+    if (!document?.content) {
+      return { error: 'Document not found' };
+    }
 
-  const suggestions: Array<
-    Omit<Suggestion, 'userId' | 'createdAt' | 'documentCreatedAt'>
-  > = [];
+    const suggestions: Array<
+      Omit<Suggestion, 'userId' | 'createdAt' | 'documentCreatedAt'>
+    > = [];
 
-  const { elementStream } = streamObject({
-    model: customModel(model.apiIdentifier),
-    system:
-      'You are a help writing assistant. Given a piece of writing, please offer suggestions to improve the piece of writing and describe the change. It is very important for the edits to contain full sentences instead of just words. Max 5 suggestions.',
-    prompt: document.content,
-    output: 'array',
-    schema: z.object({
-      originalSentence: z.string().describe('The original sentence'),
-      suggestedSentence: z.string().describe('The suggested sentence'),
-      description: z.string().describe('The description of the suggestion'),
-    }),
-  });
+    const { elementStream } = streamObject({
+      model: customModel(model.apiIdentifier),
+      system:
+        'You are a help writing assistant. Given a piece of writing, please offer suggestions to improve the piece of writing and describe the change. It is very important for the edits to contain full sentences instead of just words. Max 5 suggestions.',
+      prompt: document.content,
+      output: 'array',
+      schema: z.object({
+        originalSentence: z.string().describe('The original sentence'),
+        suggestedSentence: z.string().describe('The suggested sentence'),
+        description: z.string().describe('The description of the suggestion'),
+      }),
+    });
 
-  for await (const element of elementStream) {
-    const suggestion = {
-      originalText: element.originalSentence,
-      suggestedText: element.suggestedSentence,
-      description: element.description,
-      id: generateUUID(),
-      documentId: documentId,
-      isResolved: false,
+    for await (const element of elementStream) {
+      const suggestion = {
+        originalText: element.originalSentence,
+        suggestedText: element.suggestedSentence,
+        description: element.description,
+        id: generateUUID(),
+        documentId: documentId,
+        isResolved: false,
+      };
+
+      writeDataToStream(dataStream, DATA_STREAM_TYPES.SUGGESTION, suggestion);
+      suggestions.push(suggestion);
+    }
+
+    await saveSuggestions({
+      suggestions: suggestions.map((suggestion) => ({
+        ...suggestion,
+        userId,
+        createdAt: new Date(),
+        documentCreatedAt: document.createdAt,
+      })),
+    });
+
+    return {
+      id: documentId,
+      title: document.title,
+      kind: document.kind,
+      message: 'Suggestions have been added to the document',
     };
-
-    writeDataToStream(dataStream, DATA_STREAM_TYPES.SUGGESTION, suggestion);
-    suggestions.push(suggestion);
+  } catch (error) {
+    logError('Error requesting suggestions', error);
+    throw new Error('Failed to request suggestions.');
   }
-
-  await saveSuggestions({
-    suggestions: suggestions.map((suggestion) => ({
-      ...suggestion,
-      userId,
-      createdAt: new Date(),
-      documentCreatedAt: document.createdAt,
-    })),
-  });
-
-  return {
-    id: documentId,
-    title: document.title,
-    kind: document.kind,
-    message: 'Suggestions have been added to the document',
-  };
 }
 
 async function saveResponseMessages(
@@ -409,7 +445,7 @@ async function saveResponseMessages(
       }),
     });
   } catch (error: any) {
-    console.error('Failed to save chat messages:', error);
+    logError('Failed to save chat messages:', error);
     throw new Error(`Failed to save chat messages: ${error.message}`);
   }
 }
